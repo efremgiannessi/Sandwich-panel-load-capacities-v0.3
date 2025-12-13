@@ -1,7 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const SYSTEM_PROMPT = `
 Sei un esperto ingegnere strutturale e assistente tecnico per un'azienda che produce pannelli sandwich curvi in EPS (Polistirene Espanso Sinterizzato).
 Il tuo compito è assistere gli utenti (progettisti, architetti, costruttori) nel comprendere le tabelle di portata.
@@ -23,6 +21,18 @@ Non inventare dati se non sono presenti nella tabella.
 
 export const streamTechnicalAnswer = async (userMessage: string, currentContext?: string) => {
   try {
+    // Initialize AI client lazily to avoid "process is not defined" errors during app initialization
+    // in environments where environment variables are not immediately available or polyfilled.
+    let apiKey = '';
+    try {
+      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        apiKey = process.env.API_KEY;
+      }
+    } catch (e) {
+      console.warn("Could not access process.env. Chat features may be limited.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     const model = 'gemini-2.5-flash';
     
     // Construct the context string

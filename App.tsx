@@ -13,7 +13,7 @@ import { AIChat } from './components/AIChat';
 import { 
   FileSpreadsheet, Ruler, MessageCircle, Info, LayoutTemplate, BoxSelect, 
   Github, Grid3x3, CircleDot, Square, ArrowUpFromLine, ArrowDownToLine, 
-  ExternalLink, Share2, Printer, FileText, Download, Save, RefreshCw, Check
+  ExternalLink, Share2, Printer, Download, Save, RefreshCw, Check
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -150,7 +150,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-24 print:pb-0">
+    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-28 print:pb-0">
       
       {/* Print Styles */}
       <style>{`
