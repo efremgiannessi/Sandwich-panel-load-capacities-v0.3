@@ -1,0 +1,5 @@
+{
+  "name": "Sandwich panel load capacities v0.3",
+  "description": "Calcolatore tecnico e foglio digitale per le portate dei pannelli curvi in EPS (Polistirene Espanso Sinterizzato). Visualizzazione dati tabellari, grafici di carico e assistente AI.",
+  "requestFramePermissions": []
+}
