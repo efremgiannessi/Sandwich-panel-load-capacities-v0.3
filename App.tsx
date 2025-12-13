@@ -459,10 +459,13 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 mt-auto py-8 no-print">
-         <div className="w-full px-6 text-center">
+         <div className="w-full px-6 text-center flex flex-col items-center gap-4">
             <p className="text-slate-500 text-sm">
               &copy; {new Date().getFullYear()} SW Calculator. Designed for modern engineering.
             </p>
+            <a href="https://app.netlify.com/projects/sandwich-panel-load-capacities/deploys" target="_blank" rel="noopener noreferrer">
+              <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify Status" />
+            </a>
          </div>
       </footer>
 
