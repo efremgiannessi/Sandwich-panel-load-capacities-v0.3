@@ -94,7 +94,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-36 sm:pb-32 print:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-24 sm:pb-32 print:pb-0 overflow-x-hidden">
       <style>{`
         @media print { .no-print { display: none !important; } body { background: white; color: black; } }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -220,45 +220,45 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* MOBILE OPTIMIZED TOOLBAR */}
-      <div className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 no-print">
-        <div className="flex items-center justify-between sm:justify-center gap-1 sm:gap-4 p-2 bg-slate-900/90 backdrop-blur-2xl border border-slate-700/50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10">
+      {/* FIXED MOBILE TOOLBAR - Optimized for accessibility and viewability */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 no-print sm:bottom-6 sm:left-4 sm:right-4">
+        <div className="flex items-center justify-between gap-1 p-3 bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 sm:border sm:rounded-2xl sm:shadow-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
           
-          <button onClick={handleShare} className="flex-1 sm:flex-none flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400 active:bg-blue-600/20 active:text-blue-400">
+          <button onClick={handleShare} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-blue-600/20 active:text-blue-400">
             <Share2 className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">Share</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">Condividi</span>
           </button>
 
-          <button onClick={handlePrint} className="flex-1 sm:flex-none flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400 active:bg-slate-700 active:text-white">
+          <button onClick={handlePrint} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-slate-700 active:text-white">
             <Printer className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">PDF</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">Stampa</span>
           </button>
 
           <div className="w-px h-10 bg-slate-800 mx-1"></div>
 
-          <button onClick={handleDownloadCSV} className="flex-1 sm:flex-none flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400 active:bg-emerald-600/20 active:text-emerald-400">
+          <button onClick={handleDownloadCSV} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-emerald-600/20 active:text-emerald-400">
             <Download className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Excel</span>
           </button>
 
-          <button onClick={handleSave} className="flex-1 sm:flex-none flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400 active:bg-amber-600/20 active:text-amber-400">
+          <button onClick={handleSave} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-amber-600/20 active:text-amber-400">
             {saveStatus === 'saved' ? <Check className="w-5 h-5 text-emerald-500" /> : <Save className="w-5 h-5" />}
-            <span className="text-[9px] font-bold uppercase tracking-tighter">{saveStatus === 'saved' ? 'Fatto' : 'Save'}</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">{saveStatus === 'saved' ? 'Fatto' : 'Salva'}</span>
           </button>
 
           <div className="w-px h-10 bg-slate-800 mx-1"></div>
 
-          <button onClick={handleReload} className="flex-1 sm:flex-none flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400 active:bg-purple-600/20 active:text-purple-400">
+          <button onClick={handleReload} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-purple-600/20 active:text-purple-400">
             <RefreshCw className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Reset</span>
           </button>
         </div>
       </div>
 
-      <footer className="py-8 sm:py-12 border-t border-slate-900 bg-slate-950/50 no-print flex flex-col items-center gap-4 px-6">
-        <p className="text-[11px] sm:text-xs text-slate-600 font-medium">© {new Date().getFullYear()} SW Portate Pro • Sistema Digitale di Calcolo</p>
+      <footer className="py-12 border-t border-slate-900 bg-slate-950/50 no-print flex flex-col items-center gap-4 px-6 mb-20 sm:mb-0">
+        <p className="text-[11px] text-slate-600 font-medium">© {new Date().getFullYear()} SW Portate Pro • Efrem Giannessi</p>
         <a href="https://app.netlify.com/projects/sandwich-panel-load-capacities/deploys" target="_blank" className="hover:opacity-100 opacity-60 transition-opacity">
-          <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify" className="h-4 sm:h-5" />
+          <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify" className="h-4" />
         </a>
       </footer>
 

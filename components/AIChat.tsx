@@ -81,7 +81,7 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
              <Sparkles className="w-5 h-5 text-yellow-300" />
           </div>
           <div>
-            <h3 className="font-bold text-base">Engineering Assistant</h3>
+            <h3 className="font-bold text-base">Assistant</h3>
             <p className="text-[10px] text-blue-200 font-bold uppercase tracking-widest opacity-80">AI Technical Support</p>
           </div>
         </div>
@@ -126,4 +126,24 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey)
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Chiedi informazioni tecniche..."
+            className="w-full pl-5 pr-14 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 resize-none h-16 transition-all shadow-inner"
+          />
+          <button 
+            onClick={handleSend}
+            disabled={isLoading || !input.trim()}
+            className="absolute right-3 top-3 p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="mt-3 text-[10px] text-slate-600 text-center font-medium">L'intelligenza artificiale può sbagliare. Verificare sempre i manuali tecnici.</p>
+      </div>
+    </div>
+  );
+};
