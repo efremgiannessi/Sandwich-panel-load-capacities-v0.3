@@ -26,52 +26,27 @@ const App: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
 
-  // Derive current dataset and configuration based on panel type
   const { currentData, currentSpans, title, configInfo } = useMemo(() => {
-    if (panelType === 'curved') {
-      return {
-        currentData: CURVED_PANEL_DATA,
-        currentSpans: CURVED_SPANS,
-        title: "Pannelli Curvi",
-        configInfo: "EPS Curvo"
-      };
-    } else if (panelType === 'flat') {
-      return {
-        currentData: FLAT_PANEL_DATA,
-        currentSpans: FLAT_SPANS,
-        title: "Pannelli Piani",
-        configInfo: "EPS Piano"
-      };
-    } else if (panelType === 'penta') {
-      return {
-        currentData: PENTA_PANEL_DATA,
-        currentSpans: CURVED_SPANS,
-        title: "Penta Flagon",
-        configInfo: "Penta Flagon SW"
-      };
-    } else if (panelType === 'rock') {
-      return {
-        currentData: CURVED_ROCK_PANEL_DATA,
-        currentSpans: CURVED_ROCK_SPANS,
-        title: "Portate SW Curvo Rock",
-        configInfo: "Lana di Roccia Curvo"
-      };
-    } else {
-      return {
-        currentData: FLAT_ROCK_PANEL_DATA,
-        currentSpans: FLAT_ROCK_SPANS,
-        title: "Portate SW Piano Rock",
-        configInfo: "Lana di Roccia Piano"
-      };
-    }
+    const configs = {
+      curved: { data: CURVED_PANEL_DATA, spans: CURVED_SPANS, title: "Curvi EPS", info: "EPS Curvo" },
+      flat: { data: FLAT_PANEL_DATA, spans: FLAT_SPANS, title: "Piani EPS", info: "EPS Piano" },
+      penta: { data: PENTA_PANEL_DATA, spans: CURVED_SPANS, title: "Penta Flagon", info: "Penta Flagon SW" },
+      rock: { data: CURVED_ROCK_PANEL_DATA, spans: CURVED_ROCK_SPANS, title: "Curvo Rock", info: "Lana di Roccia Curvo" },
+      flat_rock: { data: FLAT_ROCK_PANEL_DATA, spans: FLAT_ROCK_SPANS, title: "Piano Rock", info: "Lana di Roccia Piano" }
+    };
+    const c = configs[panelType];
+    return { currentData: c.data, currentSpans: c.spans, title: c.title, configInfo: c.info };
   }, [panelType]);
 
-  // Calculate available filter options dynamically based on current data
   const filterOptions = useMemo(() => {
-    const thicknesses = Array.from(new Set(currentData.map(d => d.thickness))).sort((a: number, b: number) => a - b);
-    const steelExts = Array.from(new Set(currentData.map(d => d.steelExt))).sort((a: number, b: number) => a - b);
-    const steelInts = Array.from(new Set(currentData.map(d => d.steelInt))).sort((a: number, b: number) => a - b);
-    return { thicknesses, steelExts, steelInts };
+    const getUnique = (key: keyof typeof currentData[0]) => 
+      // Fix: Explicitly type sort parameters as numbers to resolve "left-hand side of an arithmetic operation" error
+      Array.from(new Set(currentData.map(d => d[key] as number))).sort((a: number, b: number) => a - b);
+    return {
+      thicknesses: getUnique('thickness'),
+      steelExts: getUnique('steelExt'),
+      steelInts: getUnique('steelInt')
+    };
   }, [currentData]);
 
   const filteredData = useMemo(() => {
@@ -83,398 +58,196 @@ const App: React.FC = () => {
     });
   }, [filters, currentData]);
 
-  // Reset filters when switching panel type
-  const handleTypeChange = (type: 'curved' | 'flat' | 'penta' | 'rock' | 'flat_rock') => {
+  const handleTypeChange = (type: typeof panelType) => {
     setPanelType(type);
     setFilters({ thickness: 'all', steelExt: 'all', steelInt: 'all' });
   };
 
-  // --- ACTIONS ---
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleReload = () => {
-    window.location.reload();
-  };
-
+  const handlePrint = () => window.print();
+  const handleReload = () => window.location.reload();
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'SW Calculator',
-          text: 'Calcolatore Portate Pannelli Sandwich',
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Error sharing', err);
-      }
+        await navigator.share({ title: 'SW Calculator', url: window.location.href });
+      } catch (err) {}
     } else {
-      alert("Copia il link dalla barra degli indirizzi per condividere!");
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copiato negli appunti!");
     }
   };
 
   const handleDownloadCSV = () => {
-    // Generate Headers
-    const headers = ["ID", "Spessore (mm)", "Acciaio Est (mm)", "Acciaio Int (mm)", "Peso (kg/m2)", "Trasmittanza", ...currentSpans.map(s => `Luce ${s}cm`)];
-    
-    // Generate Rows
+    const headers = ["Spessore", "Est", "Int", "Peso", "Trasm", ...currentSpans.map(s => `Luce ${s}`)];
     const rows = filteredData.map(row => [
-      row.id,
-      row.thickness,
-      row.steelExt,
-      row.steelInt,
-      row.weight,
-      row.transmittance || '-',
-      ...currentSpans.map(span => row.loads[span] !== null && row.loads[span] !== undefined ? row.loads[span] : '')
+      row.thickness, row.steelExt, row.steelInt, row.weight, row.transmittance || '-',
+      ...currentSpans.map(span => row.loads[span] ?? '')
     ]);
-
-    // Combine and convert to CSV format
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `portate_${panelType}_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `portate_${panelType}.csv`);
     link.click();
-    document.body.removeChild(link);
   };
 
   const handleSave = () => {
-    // Mock save functionality
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus('idle'), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-28 print:pb-0">
-      
-      {/* Print Styles */}
+    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-32 sm:pb-28 print:pb-0 overflow-x-hidden">
       <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background-color: white !important; color: black !important; }
-          .print-black { color: black !important; }
-        }
+        @media print { .no-print { display: none !important; } body { background: white; color: black; } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* Top Credit Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-slate-900 to-blue-900 border-b border-blue-800/50 py-2.5 text-center relative overflow-hidden no-print">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
-        <p className="text-sm text-blue-100 font-medium relative z-10 flex items-center justify-center gap-2">
-          Software progettato e sviluppato da 
-          <a 
-            href="https://www.efremgiannessi.org" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-white font-bold hover:text-blue-300 underline decoration-blue-400/50 hover:decoration-blue-400 transition-all flex items-center gap-1"
-          >
-            Efrem Giannessi
-            <ExternalLink className="w-3 h-3 opacity-50" />
-          </a>
+      {/* Credit Banner */}
+      <div className="bg-slate-900 border-b border-blue-900/30 py-2 text-center no-print">
+        <p className="text-[11px] sm:text-sm text-blue-300 flex items-center justify-center gap-1">
+          Developed by <a href="https://www.efremgiannessi.org" target="_blank" className="text-white font-bold underline">Efrem Giannessi</a>
         </p>
       </div>
 
-      {/* Navbar */}
-      <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 no-print">
-        <div className="w-full px-4 lg:px-6">
-          <div className="flex justify-between items-center h-20">
-            
-            {/* Logo Section */}
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
-                <FileSpreadsheet className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-bold text-white tracking-tight leading-none">SW Calculator</h1>
-                <span className="text-[10px] text-slate-400 font-medium tracking-wide mt-1">Sandwich panel load capacities</span>
-              </div>
+      {/* Header */}
+      <nav className="bg-slate-900/90 backdrop-blur-lg border-b border-slate-800 sticky top-0 z-30 no-print">
+        <div className="max-w-full px-4 sm:px-6 h-16 sm:h-20 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-1.5 sm:p-2 rounded-lg">
+              <FileSpreadsheet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-
-            {/* Right Section: Status & Actions */}
-            <div className="flex items-center gap-6">
-              
-              {/* Status Indicator (Simulated Image) */}
-              <div className="hidden md:flex flex-col items-end">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Stato Sistema</span>
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                  </span>
-                  <span className="text-sm font-bold text-white">Online & Ready</span>
-                </div>
-              </div>
-
-              <div className="h-8 w-px bg-slate-800 hidden md:block"></div>
-
-              <button 
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg ${
-                  isChatOpen 
-                    ? 'bg-blue-600 text-white shadow-blue-500/25 ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-900' 
-                    : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">AI Assistant</span>
-              </button>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">Portate SW</h1>
+              <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium uppercase tracking-tighter block">EPS & Rock Panels</span>
             </div>
           </div>
+          <button 
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              isChatOpen ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span className="hidden xs:inline">AI Assistant</span>
+          </button>
         </div>
       </nav>
 
-      <main className="w-full px-4 lg:px-6 py-6 space-y-6 flex-grow">
-
-        {/* Top Control Bar */}
-        <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-lg no-print">
-          
-          {/* Panel Type Selector */}
-          <div className="bg-slate-950 p-1.5 rounded-xl flex shadow-inner w-full xl:w-auto overflow-x-auto">
-            <button
-              onClick={() => handleTypeChange('curved')}
-              className={`flex-1 xl:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                panelType === 'curved' 
-                  ? 'bg-slate-800 text-blue-400 shadow-sm ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <LayoutTemplate className="w-4 h-4" />
-              SW Curvo EPS
-            </button>
-            <button
-              onClick={() => handleTypeChange('flat')}
-              className={`flex-1 xl:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                panelType === 'flat' 
-                  ? 'bg-slate-800 text-blue-400 shadow-sm ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <BoxSelect className="w-4 h-4" />
-              SW Piano EPS
-            </button>
-            <button
-              onClick={() => handleTypeChange('penta')}
-              className={`flex-1 xl:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                panelType === 'penta' 
-                  ? 'bg-slate-800 text-blue-400 shadow-sm ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <Grid3x3 className="w-4 h-4" />
-              Penta Flagon
-            </button>
-            <button
-              onClick={() => handleTypeChange('rock')}
-              className={`flex-1 xl:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                panelType === 'rock' 
-                  ? 'bg-slate-800 text-blue-400 shadow-sm ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <CircleDot className="w-4 h-4" />
-              Curvo Rock
-            </button>
-            <button
-              onClick={() => handleTypeChange('flat_rock')}
-              className={`flex-1 xl:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                panelType === 'flat_rock' 
-                  ? 'bg-slate-800 text-blue-400 shadow-sm ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <Square className="w-4 h-4" />
-              Piano Rock
-            </button>
-          </div>
-
-          {/* Filters inline for desktop */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto px-2 pb-2 xl:pb-0">
-             {/* Thickness Filter */}
-             <div className="relative group w-full sm:w-40">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                 <Ruler className="h-4 w-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-               </div>
-               <select
-                 value={filters.thickness}
-                 onChange={(e) => setFilters(prev => ({ ...prev, thickness: e.target.value === 'all' ? 'all' : Number(e.target.value) }))}
-                 className="block w-full pl-10 pr-4 py-2.5 rounded-lg border-slate-700 bg-slate-800 text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium appearance-none cursor-pointer transition-all hover:bg-slate-750"
-               >
-                 <option value="all">Spessore: Tutti</option>
-                 {filterOptions.thicknesses.map(t => (
-                   <option key={t} value={t}>{t} mm</option>
-                 ))}
-               </select>
-             </div>
-
-             {/* Steel Ext Filter */}
-             <div className="relative group w-full sm:w-40">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                 <ArrowUpFromLine className="h-4 w-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-               </div>
-               <select
-                 value={filters.steelExt}
-                 onChange={(e) => setFilters(prev => ({ ...prev, steelExt: e.target.value === 'all' ? 'all' : Number(e.target.value) }))}
-                 className="block w-full pl-10 pr-4 py-2.5 rounded-lg border-slate-700 bg-slate-800 text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium appearance-none cursor-pointer transition-all hover:bg-slate-750"
-               >
-                 <option value="all">Esterno: Tutti</option>
-                 {filterOptions.steelExts.map(s => (
-                   <option key={s} value={s}>{s.toFixed(1)} mm</option>
-                 ))}
-               </select>
-             </div>
-
-             {/* Steel Int Filter */}
-             <div className="relative group w-full sm:w-40">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                 <ArrowDownToLine className="h-4 w-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-               </div>
-               <select
-                 value={filters.steelInt}
-                 onChange={(e) => setFilters(prev => ({ ...prev, steelInt: e.target.value === 'all' ? 'all' : Number(e.target.value) }))}
-                 className="block w-full pl-10 pr-4 py-2.5 rounded-lg border-slate-700 bg-slate-800 text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium appearance-none cursor-pointer transition-all hover:bg-slate-750"
-               >
-                 <option value="all">Interno: Tutti</option>
-                 {filterOptions.steelInts.map(s => (
-                   <option key={s} value={s}>{s.toFixed(1)} mm</option>
-                 ))}
-               </select>
-             </div>
+      <main className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 flex-grow">
+        
+        {/* Panel Type Selector (Horizontal Scroll) */}
+        <div className="relative no-print">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 px-1 snap-x">
+            {[
+              { id: 'curved', icon: LayoutTemplate, label: 'Curvo EPS' },
+              { id: 'flat', icon: BoxSelect, label: 'Piano EPS' },
+              { id: 'penta', icon: Grid3x3, label: 'Penta' },
+              { id: 'rock', icon: CircleDot, label: 'Curvo Rock' },
+              { id: 'flat_rock', icon: Square, label: 'Piano Rock' }
+            ].map(type => (
+              <button
+                key={type.id}
+                onClick={() => handleTypeChange(type.id as any)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap snap-start border ${
+                  panelType === type.id 
+                    ? 'bg-blue-600/10 border-blue-500 text-blue-400' 
+                    : 'bg-slate-900 border-slate-800 text-slate-500'
+                }`}
+              >
+                <type.icon className="w-3.5 h-3.5" />
+                {type.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Info Banner */}
-        <div className="w-full bg-blue-900/20 border border-blue-900/50 rounded-xl p-3 flex items-center gap-3 text-sm text-blue-200 no-print">
-           <Info className="w-4 h-4 flex-shrink-0 text-blue-400" />
-           <p>
-             <span className="font-semibold text-blue-400">Configurazione:</span> {configInfo}
-           </p>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          
-          {/* Table (Takes up 3/4 on large screens) */}
-          <div className="xl:col-span-3 space-y-4">
-             <div className="flex items-center justify-between px-1">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2 print-black">
-                  <span className="w-2 h-6 bg-blue-500 rounded-full no-print"></span>
-                  Tabella di Carico - {title}
-                </h2>
-                <span className="text-xs font-mono font-bold bg-slate-800 text-slate-300 px-3 py-1.5 rounded-md border border-slate-700 shadow-sm no-print">
-                  UNITÀ: Kg/mq
-                </span>
-             </div>
-             
-             {filteredData.length > 0 ? (
-               <DataTable data={filteredData} spans={currentSpans} />
-             ) : (
-               <div className="h-96 flex flex-col items-center justify-center bg-slate-900 rounded-2xl border-2 border-dashed border-slate-800 text-slate-500">
-                 <FileSpreadsheet className="w-12 h-12 mb-4 opacity-50" />
-                 <p className="text-lg font-medium">Nessun dato trovato</p>
-                 <p className="text-sm">Prova a modificare i filtri di ricerca</p>
-               </div>
-             )}
-          </div>
-
-          {/* Chart & Stats (Takes up 1/4 on large screens) */}
-          <div className="xl:col-span-1 space-y-6 no-print">
-            <div className="space-y-4">
-               <h2 className="text-xl font-bold text-white px-1">Analisi Grafica</h2>
-               <LoadChart data={filteredData} spans={currentSpans} />
-            </div>
-            
-            <div className="bg-amber-950/20 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
-               <div className="flex items-start gap-3">
-                 <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                 <div className="text-sm text-amber-200/80">
-                    <p className="font-bold text-amber-500 mb-1">Disclaimer Tecnico</p>
-                    <p className="leading-relaxed text-xs">
-                      Valori indicativi per carichi statici uniformemente distribuiti. 
-                      Dimensionamento definitivo soggetto a verifica ingegneristica conforme NTC 2018.
-                    </p>
-                 </div>
-               </div>
-            </div>
-
-            {/* GitHub/Netlify Badge (Visual only) */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Repository Status</h3>
-              <div className="flex items-center gap-3 text-xs text-slate-500">
-                <div className="flex items-center gap-1.5">
-                  <Github className="w-3.5 h-3.5" />
-                  <span>main branch</span>
-                </div>
-                <div className="w-1 h-1 bg-slate-700 rounded-full"></div>
-                <div className="text-emerald-500 flex items-center gap-1">
-                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                   Netlify Ready
-                </div>
+        {/* Filters Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
+          {[
+            { id: 'thickness', icon: Ruler, label: 'Spessore', options: filterOptions.thicknesses, suffix: 'mm' },
+            { id: 'steelExt', icon: ArrowUpFromLine, label: 'Esterno', options: filterOptions.steelExts, suffix: 'mm' },
+            { id: 'steelInt', icon: ArrowDownToLine, label: 'Interno', options: filterOptions.steelInts, suffix: 'mm' }
+          ].map(f => (
+            <div key={f.id} className="relative group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <f.icon className="h-4 w-4 text-slate-500" />
               </div>
+              <select
+                value={filters[f.id as keyof FilterState]}
+                onChange={(e) => setFilters(prev => ({ ...prev, [f.id]: e.target.value === 'all' ? 'all' : Number(e.target.value) }))}
+                className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
+              >
+                <option value="all">{f.label}: Tutti</option>
+                {f.options.map(opt => <option key={opt} value={opt}>{opt} {f.suffix}</option>)}
+              </select>
             </div>
+          ))}
+        </div>
 
+        {/* Config Summary */}
+        <div className="bg-blue-900/10 border border-blue-900/20 rounded-xl p-3 flex items-center gap-3 text-[11px] sm:text-xs text-blue-400 no-print">
+          <Info className="w-4 h-4 flex-shrink-0" />
+          <span><strong>In uso:</strong> {configInfo} • <strong>Filtri attivi:</strong> {filteredData.length} varianti</span>
+        </div>
+
+        {/* Main Content Sections */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-3 space-y-4">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2 print-black">
+              <span className="w-1.5 h-5 bg-blue-500 rounded-full"></span>
+              Tabella {title} <span className="text-[10px] text-slate-500 ml-2">(kg/mq)</span>
+            </h2>
+            {filteredData.length > 0 ? (
+              <DataTable data={filteredData} spans={currentSpans} />
+            ) : (
+              <div className="h-40 flex flex-col items-center justify-center bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-800 text-slate-600">
+                <p>Nessuna corrispondenza</p>
+              </div>
+            )}
           </div>
 
+          <div className="xl:col-span-1 space-y-6 no-print">
+            <LoadChart data={filteredData.slice(0, 5)} spans={currentSpans} />
+            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-[10px] leading-relaxed text-slate-500">
+              <p className="font-bold text-slate-400 mb-1">NOTE TECNICHE</p>
+              Valori calcolati per appoggio semplice. Verificare le prescrizioni locali per carichi accidentali.
+            </div>
+          </div>
         </div>
       </main>
 
-      {/* Floating Bottom Toolbar */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 no-print w-[90%] sm:w-auto">
-        <div className="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 p-2 sm:p-2.5 bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl ring-1 ring-white/10">
-          
-          <button onClick={handleShare} className="group relative p-2.5 rounded-xl hover:bg-slate-800 transition-all text-slate-400 hover:text-blue-400">
-            <Share2 className="w-5 h-5" />
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Condividi</span>
-          </button>
-
-          <button onClick={handlePrint} className="group relative p-2.5 rounded-xl hover:bg-slate-800 transition-all text-slate-400 hover:text-blue-400">
-            <Printer className="w-5 h-5" />
-             <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Stampa / PDF</span>
-          </button>
-
-          <div className="w-px h-6 bg-slate-700 mx-1"></div>
-
-          <button onClick={handleDownloadCSV} className="group relative p-2.5 rounded-xl hover:bg-slate-800 transition-all text-slate-400 hover:text-emerald-400">
-            <Download className="w-5 h-5" />
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Scarica Excel</span>
-          </button>
-
-          <button onClick={handleSave} className="group relative p-2.5 rounded-xl hover:bg-slate-800 transition-all text-slate-400 hover:text-amber-400">
-            {saveStatus === 'saved' ? <Check className="w-5 h-5 text-emerald-500" /> : <Save className="w-5 h-5" />}
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Salva</span>
-          </button>
-
-           <div className="w-px h-6 bg-slate-700 mx-1"></div>
-
-          <button onClick={handleReload} className="group relative p-2.5 rounded-xl hover:bg-slate-800 transition-all text-slate-400 hover:text-purple-400">
-            <RefreshCw className="w-5 h-5" />
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Ricarica</span>
-          </button>
-
+      {/* FIXED MOBILE TOOLBAR */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 no-print w-[94%] xs:w-auto">
+        <div className="flex items-center justify-around xs:justify-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl ring-1 ring-white/5">
+          {[
+            { icon: Share2, action: handleShare, label: 'Condividi', color: 'hover:text-blue-400' },
+            { icon: Printer, action: handlePrint, label: 'Stampa', color: 'hover:text-slate-200' },
+            { icon: Download, action: handleDownloadCSV, label: 'Excel', color: 'hover:text-emerald-400' },
+            { icon: Save, action: handleSave, label: 'Salva', color: 'hover:text-amber-400', special: saveStatus === 'saved' },
+            { icon: RefreshCw, action: handleReload, label: 'Reset', color: 'hover:text-purple-400' }
+          ].map((btn, i) => (
+            <React.Fragment key={i}>
+              <button 
+                onClick={btn.action} 
+                className={`flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl transition-all text-slate-500 ${btn.color} active:scale-95`}
+                title={btn.label}
+              >
+                {btn.special ? <Check className="w-5 h-5 text-emerald-500" /> : <btn.icon className="w-5 h-5" />}
+                <span className="text-[8px] mt-1 font-medium hidden xs:block">{btn.label}</span>
+              </button>
+              {(i === 1 || i === 3) && <div className="w-px h-8 bg-slate-800 mx-0.5 sm:mx-1"></div>}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 mt-auto py-8 no-print">
-         <div className="w-full px-6 text-center flex flex-col items-center gap-4">
-            <p className="text-slate-500 text-sm">
-              &copy; {new Date().getFullYear()} SW Calculator. Designed for modern engineering.
-            </p>
-            <a href="https://app.netlify.com/projects/sandwich-panel-load-capacities/deploys" target="_blank" rel="noopener noreferrer">
-              <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify Status" />
-            </a>
-         </div>
+      <footer className="py-6 sm:py-10 text-center no-print border-t border-slate-900">
+        <a href="https://app.netlify.com/projects/sandwich-panel-load-capacities/deploys" target="_blank" className="inline-block opacity-70 hover:opacity-100 transition-opacity">
+          <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify" className="h-4 sm:h-5" />
+        </a>
       </footer>
 
-      {/* Chat Bot Overlay */}
-      <AIChat 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
-        contextData={filteredData}
-      />
+      <AIChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} contextData={filteredData} />
     </div>
   );
 };

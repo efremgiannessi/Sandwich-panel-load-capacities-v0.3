@@ -21,19 +21,10 @@ Non inventare dati se non sono presenti nella tabella.
 
 export const streamTechnicalAnswer = async (userMessage: string, currentContext?: string) => {
   try {
-    // Initialize AI client lazily to avoid "process is not defined" errors during app initialization
-    // in environments where environment variables are not immediately available or polyfilled.
-    let apiKey = '';
-    try {
-      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-        apiKey = process.env.API_KEY;
-      }
-    } catch (e) {
-      console.warn("Could not access process.env. Chat features may be limited.");
-    }
-
-    const ai = new GoogleGenAI({ apiKey: apiKey });
-    const model = 'gemini-2.5-flash';
+    // Initialize AI client using direct process.env.API_KEY as per guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Use the recommended model for Basic Text Tasks
+    const model = 'gemini-3-flash-preview';
     
     // Construct the context string
     let fullPrompt = userMessage;
