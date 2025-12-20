@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles, X, ChevronDown } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { streamTechnicalAnswer } from '../services/geminiService';
 import { ChatMessage, MessageRole, PanelSpec } from '../types';
 import { GenerateContentResponse } from '@google/genai';
@@ -23,8 +23,8 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isOpen) scrollToBottom();
+  }, [messages, isOpen]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -35,16 +35,13 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
     setIsLoading(true);
 
     try {
-      // Serialize context with loads to give AI actual data capability
-      // Limit to first 20 panels to avoid excessive tokens if filters are open, 
-      // but usually filtering reduces this list significantly.
-      const contextSummary = contextData.slice(0, 20).map(p => {
+      const contextSummary = contextData.slice(0, 15).map(p => {
         const loadsStr = Object.entries(p.loads)
           .filter(([_, val]) => val !== null && val !== undefined)
-          .map(([span, val]) => `${span}cm: ${val}kg`)
+          .map(([span, val]) => `${span}cm:${val}kg`)
           .join(', ');
         
-        return `[ID: ${p.id}, Spess: ${p.thickness}mm, Acciaio Est: ${p.steelExt}mm, Acciaio Int: ${p.steelInt}mm, Peso: ${p.weight}kg/m2, Trasm: ${p.transmittance || 'N/A'}, Carichi(kg/m2): ${loadsStr}]`;
+        return `[T${p.thickness}mm, Est:${p.steelExt}mm, Int:${p.steelInt}mm, Loads: ${loadsStr}]`;
       }).join('\n');
 
       const streamResponse = await streamTechnicalAnswer(userMsg, contextSummary);
@@ -66,7 +63,7 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
 
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: MessageRole.MODEL, text: "Errore di connessione. Riprova più tardi.", isError: true }]);
+      setMessages(prev => [...prev, { role: MessageRole.MODEL, text: "Errore. Riprova tra poco.", isError: true }]);
     } finally {
       setIsLoading(false);
     }
@@ -75,81 +72,58 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 w-full sm:w-[400px] h-[600px] max-h-[85vh] bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 flex flex-col z-50 overflow-hidden font-sans ring-1 ring-black/50">
+    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 w-full sm:w-[420px] h-full sm:h-[650px] sm:max-h-[85vh] bg-slate-900 sm:rounded-3xl shadow-2xl border-t sm:border border-slate-800 flex flex-col z-50 overflow-hidden ring-1 ring-white/5 animate-in slide-in-from-bottom duration-300">
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 p-4 flex justify-between items-center text-white shadow-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
-             <Sparkles className="w-4 h-4 text-yellow-300" />
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-5 flex justify-between items-center text-white relative">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+             <Sparkles className="w-5 h-5 text-yellow-300" />
           </div>
           <div>
-            <h3 className="font-bold text-sm">Assistente Tecnico</h3>
-            <p className="text-[10px] text-blue-200 font-medium opacity-90">Powered by Gemini AI</p>
+            <h3 className="font-bold text-base">Engineering Assistant</h3>
+            <p className="text-[10px] text-blue-200 font-bold uppercase tracking-widest opacity-80">AI Technical Support</p>
           </div>
         </div>
-        <button onClick={onClose} className="hover:bg-white/20 p-2 rounded-full transition-colors relative z-10">
-          <ChevronDown className="w-5 h-5" />
+        <button onClick={onClose} className="p-2.5 bg-black/20 hover:bg-black/40 rounded-full transition-all active:scale-90">
+          <ChevronDown className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-slate-950/50 scrollbar-hide">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-slate-950/30 scrollbar-hide">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex items-start gap-3 ${msg.role === MessageRole.USER ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg ${
+          <div key={idx} className={`flex items-start gap-3 ${msg.role === MessageRole.USER ? 'flex-row-reverse' : ''}`}>
+            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl ${
               msg.role === MessageRole.USER 
-                ? 'bg-blue-600 ring-2 ring-blue-500/30' 
-                : 'bg-emerald-600 ring-2 ring-emerald-500/30'
+                ? 'bg-blue-600' 
+                : 'bg-emerald-600'
             }`}>
-              {msg.role === MessageRole.USER ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
+              {msg.role === MessageRole.USER ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
             </div>
-            <div className={`max-w-[85%] rounded-2xl p-3.5 text-sm leading-relaxed shadow-md ${
+            <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
               msg.role === MessageRole.USER 
-                ? 'bg-blue-600 text-white rounded-tr-sm' 
-                : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-sm'
-            } ${msg.isError ? 'bg-red-900/50 text-red-200 border-red-800' : ''}`}>
+                ? 'bg-blue-600 text-white font-medium rounded-tr-none' 
+                : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-tl-none'
+            } ${msg.isError ? 'bg-red-900/30 border-red-900/50 text-red-200' : ''}`}>
               {msg.text}
             </div>
           </div>
         ))}
         {isLoading && (
-          <div className="flex items-center gap-2 text-slate-500 text-xs ml-12">
+          <div className="flex items-center gap-2 text-slate-500 text-[11px] font-bold ml-12 uppercase tracking-tighter">
             <Loader2 className="w-3 h-3 animate-spin" />
-            <span>Elaborazione risposta...</span>
+            <span>AI is analyzing data...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 bg-slate-900 border-t border-slate-800">
-        <div className="relative">
+      {/* Input area */}
+      <div className="p-5 bg-slate-900 border-t border-slate-800/50 pb-8 sm:pb-5">
+        <div className="relative group">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Scrivi qui la tua domanda..."
-            className="w-full pl-4 pr-12 py-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none h-14 scrollbar-hide shadow-inner transition-all"
-          />
-          <button 
-            onClick={handleSend}
-            disabled={isLoading || !input.trim()}
-            className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/20"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="mt-2 text-center">
-            <p className="text-[10px] text-slate-600">L'IA può commettere errori. Verificare i dati ufficiali.</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+              if (e.key === 'Enter' && !e.shiftKey)
