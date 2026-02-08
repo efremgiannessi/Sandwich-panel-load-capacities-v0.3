@@ -72,17 +72,17 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 w-full sm:w-[420px] h-full sm:h-[650px] sm:max-h-[85vh] bg-slate-900 sm:rounded-3xl shadow-2xl border-t sm:border border-slate-800 flex flex-col z-50 overflow-hidden ring-1 ring-white/5 animate-in slide-in-from-bottom duration-300">
+    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 w-full sm:w-[420px] h-full sm:h-[650px] sm:max-h-[85vh] bg-neutral-900 sm:rounded-3xl shadow-2xl border-t sm:border border-neutral-800 flex flex-col z-50 overflow-hidden ring-1 ring-white/5 animate-in slide-in-from-bottom duration-300">
       
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-5 flex justify-between items-center text-white relative">
+      {/* Header - ORANGE GRADIENT */}
+      <div className="bg-gradient-to-br from-orange-600 to-orange-700 p-5 flex justify-between items-center text-white relative">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
-             <Sparkles className="w-5 h-5 text-yellow-300" />
+             <Sparkles className="w-5 h-5 text-yellow-200" />
           </div>
           <div>
             <h3 className="font-bold text-base">Assistant</h3>
-            <p className="text-[10px] text-blue-200 font-bold uppercase tracking-widest opacity-80">AI Technical Support</p>
+            <p className="text-[10px] text-orange-100 font-bold uppercase tracking-widest opacity-80">AI Technical Support</p>
           </div>
         </div>
         <button onClick={onClose} className="p-2.5 bg-black/20 hover:bg-black/40 rounded-full transition-all active:scale-90">
@@ -91,27 +91,27 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-slate-950/30 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-neutral-950/30 scrollbar-hide">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex items-start gap-3 ${msg.role === MessageRole.USER ? 'flex-row-reverse' : ''}`}>
             <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl ${
               msg.role === MessageRole.USER 
-                ? 'bg-blue-600' 
-                : 'bg-emerald-600'
+                ? 'bg-orange-600' 
+                : 'bg-neutral-600'
             }`}>
               {msg.role === MessageRole.USER ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
             </div>
             <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
               msg.role === MessageRole.USER 
-                ? 'bg-blue-600 text-white font-medium rounded-tr-none' 
-                : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-tl-none'
+                ? 'bg-orange-600 text-white font-medium rounded-tr-none' 
+                : 'bg-neutral-800 text-neutral-200 border border-neutral-700/50 rounded-tl-none'
             } ${msg.isError ? 'bg-red-900/30 border-red-900/50 text-red-200' : ''}`}>
               {msg.text}
             </div>
           </div>
         ))}
         {isLoading && (
-          <div className="flex items-center gap-2 text-slate-500 text-[11px] font-bold ml-12 uppercase tracking-tighter">
+          <div className="flex items-center gap-2 text-neutral-500 text-[11px] font-bold ml-12 uppercase tracking-tighter">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>AI is analyzing data...</span>
           </div>
@@ -120,7 +120,7 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
       </div>
 
       {/* Input area */}
-      <div className="p-5 bg-slate-900 border-t border-slate-800/50 pb-8 sm:pb-5">
+      <div className="p-5 bg-neutral-900 border-t border-neutral-800/50 pb-8 sm:pb-5">
         <div className="relative group">
           <textarea
             value={input}
@@ -132,17 +132,17 @@ export const AIChat: React.FC<AIChatProps> = ({ contextData, isOpen, onClose }) 
               }
             }}
             placeholder="Chiedi informazioni tecniche..."
-            className="w-full pl-5 pr-14 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 resize-none h-16 transition-all shadow-inner"
+            className="w-full pl-5 pr-14 py-4 bg-neutral-950 border border-neutral-800 rounded-2xl text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50 resize-none h-16 transition-all shadow-inner"
           />
           <button 
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="absolute right-3 top-3 p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95"
+            className="absolute right-3 top-3 p-3 bg-orange-600 text-white rounded-xl hover:bg-orange-500 disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
-        <p className="mt-3 text-[10px] text-slate-600 text-center font-medium">L'intelligenza artificiale può sbagliare. Verificare sempre i manuali tecnici.</p>
+        <p className="mt-3 text-[10px] text-neutral-600 text-center font-medium">L'intelligenza artificiale può sbagliare. Verificare sempre i manuali tecnici.</p>
       </div>
     </div>
   );

@@ -94,7 +94,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-blue-500 selection:text-white flex flex-col pb-24 sm:pb-32 print:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-neutral-950 text-neutral-200 selection:bg-orange-500 selection:text-white flex flex-col pb-24 sm:pb-32 print:pb-0 overflow-x-hidden">
       <style>{`
         @media print { .no-print { display: none !important; } body { background: white; color: black; } }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -102,15 +102,15 @@ const App: React.FC = () => {
       `}</style>
 
       {/* Header Mobile Opt */}
-      <nav className="bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-30 no-print">
+      <nav className="bg-neutral-900/95 backdrop-blur-xl border-b border-neutral-800 sticky top-0 z-30 no-print">
         <div className="max-w-full px-4 h-16 sm:h-20 flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-blue-600 p-1.5 rounded-lg shadow-lg shadow-blue-900/20">
+            <div className="bg-orange-600 p-1.5 rounded-lg shadow-lg shadow-orange-900/20">
               <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-base sm:text-xl font-bold text-white leading-tight">Portate SW</h1>
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tighter sm:block hidden">EPS & Rock Panels</p>
+              <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-tighter sm:block hidden">EPS & Rock Panels</p>
             </div>
           </div>
           
@@ -118,7 +118,7 @@ const App: React.FC = () => {
             <button 
               onClick={() => setIsChatOpen(!isChatOpen)}
               className={`flex items-center justify-center w-10 h-10 sm:w-auto sm:px-4 sm:py-2 rounded-xl transition-all shadow-md ${
-                isChatOpen ? 'bg-blue-600 text-white shadow-blue-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                isChatOpen ? 'bg-orange-600 text-white shadow-orange-500/30' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
               }`}
               title="AI Assistant"
             >
@@ -146,8 +146,8 @@ const App: React.FC = () => {
                 onClick={() => handleTypeChange(type.id as any)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap snap-start border ${
                   panelType === type.id 
-                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/40' 
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-orange-600 border-orange-500 text-white shadow-lg shadow-orange-900/40' 
+                    : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'
                 }`}
               >
                 <type.icon className="w-4 h-4" />
@@ -166,12 +166,12 @@ const App: React.FC = () => {
           ].map(f => (
             <div key={f.id} className="relative">
               <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                <f.icon className="h-4 w-4 text-slate-500" />
+                <f.icon className="h-4 w-4 text-neutral-500" />
               </div>
               <select
                 value={filters[f.id as keyof FilterState]}
                 onChange={(e) => setFilters(prev => ({ ...prev, [f.id]: e.target.value === 'all' ? 'all' : Number(e.target.value) }))}
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-900 border border-slate-800 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer hover:bg-slate-850"
+                className="w-full pl-11 pr-4 py-3.5 bg-neutral-900 border border-neutral-800 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none cursor-pointer hover:bg-neutral-850"
               >
                 <option value="all">{f.label}: Tutti</option>
                 {f.options.map(opt => <option key={opt} value={opt}>{opt} {f.suffix}</option>)}
@@ -185,16 +185,16 @@ const App: React.FC = () => {
           <div className="xl:col-span-3 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
                 {title}
               </h2>
-              <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700">KG/MQ</span>
+              <span className="text-[10px] font-bold bg-neutral-800 text-neutral-400 px-2 py-1 rounded border border-neutral-700">KG/MQ</span>
             </div>
             
             {filteredData.length > 0 ? (
               <DataTable data={filteredData} spans={currentSpans} />
             ) : (
-              <div className="h-48 flex flex-col items-center justify-center bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-800 text-slate-500">
+              <div className="h-48 flex flex-col items-center justify-center bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-800 text-neutral-500">
                 <Info className="w-8 h-8 mb-2 opacity-20" />
                 <p className="text-sm font-medium">Nessuna variante trovata</p>
               </div>
@@ -206,11 +206,11 @@ const App: React.FC = () => {
               <LoadChart data={filteredData.slice(0, 5)} spans={currentSpans} />
             </div>
             
-            <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+            <div className="bg-neutral-900/50 p-4 rounded-2xl border border-neutral-800">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                <div className="text-[11px] leading-relaxed text-slate-400">
-                  <p className="font-bold text-slate-200 mb-1">DISCLAIMER</p>
+                <Info className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="text-[11px] leading-relaxed text-neutral-400">
+                  <p className="font-bold text-neutral-200 mb-1">DISCLAIMER</p>
                   Valori calcolati per appoggio semplice (schema a campata singola). 
                   Per configurazioni a più appoggi o carichi speciali contattare l'ufficio tecnico.
                 </div>
@@ -222,41 +222,41 @@ const App: React.FC = () => {
 
       {/* FIXED MOBILE TOOLBAR - Optimized for accessibility and viewability */}
       <div className="fixed bottom-0 left-0 right-0 z-40 no-print sm:bottom-6 sm:left-4 sm:right-4">
-        <div className="flex items-center justify-between gap-1 p-3 bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 sm:border sm:rounded-2xl sm:shadow-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+        <div className="flex items-center justify-between gap-1 p-3 bg-neutral-900/95 backdrop-blur-2xl border-t border-neutral-800 sm:border sm:rounded-2xl sm:shadow-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
           
-          <button onClick={handleShare} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-blue-600/20 active:text-blue-400">
+          <button onClick={handleShare} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-neutral-800 transition-colors text-neutral-400 active:bg-orange-600/20 active:text-orange-400">
             <Share2 className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Condividi</span>
           </button>
 
-          <button onClick={handlePrint} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-slate-700 active:text-white">
+          <button onClick={handlePrint} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-neutral-800 transition-colors text-neutral-400 active:bg-neutral-700 active:text-white">
             <Printer className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Stampa</span>
           </button>
 
-          <div className="w-px h-10 bg-slate-800 mx-1"></div>
+          <div className="w-px h-10 bg-neutral-800 mx-1"></div>
 
-          <button onClick={handleDownloadCSV} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-emerald-600/20 active:text-emerald-400">
+          <button onClick={handleDownloadCSV} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-neutral-800 transition-colors text-neutral-400 active:bg-emerald-600/20 active:text-emerald-400">
             <Download className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Excel</span>
           </button>
 
-          <button onClick={handleSave} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-amber-600/20 active:text-amber-400">
+          <button onClick={handleSave} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-neutral-800 transition-colors text-neutral-400 active:bg-orange-600/20 active:text-orange-400">
             {saveStatus === 'saved' ? <Check className="w-5 h-5 text-emerald-500" /> : <Save className="w-5 h-5" />}
             <span className="text-[9px] font-bold uppercase tracking-tighter">{saveStatus === 'saved' ? 'Fatto' : 'Salva'}</span>
           </button>
 
-          <div className="w-px h-10 bg-slate-800 mx-1"></div>
+          <div className="w-px h-10 bg-neutral-800 mx-1"></div>
 
-          <button onClick={handleReload} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 active:bg-purple-600/20 active:text-purple-400">
+          <button onClick={handleReload} className="flex-1 flex flex-col items-center gap-1 py-1 rounded-xl hover:bg-neutral-800 transition-colors text-neutral-400 active:bg-purple-600/20 active:text-purple-400">
             <RefreshCw className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">Reset</span>
           </button>
         </div>
       </div>
 
-      <footer className="py-12 border-t border-slate-900 bg-slate-950/50 no-print flex flex-col items-center gap-4 px-6 mb-20 sm:mb-0">
-        <p className="text-[11px] text-slate-600 font-medium">© {new Date().getFullYear()} SW Portate Pro • Efrem Giannessi</p>
+      <footer className="py-12 border-t border-neutral-900 bg-neutral-950/50 no-print flex flex-col items-center gap-4 px-6 mb-20 sm:mb-0">
+        <p className="text-[11px] text-neutral-600 font-medium">© {new Date().getFullYear()} SW Portate Pro • Efrem Giannessi</p>
         <a href="https://app.netlify.com/projects/sandwich-panel-load-capacities/deploys" target="_blank" className="hover:opacity-100 opacity-60 transition-opacity">
           <img src="https://api.netlify.com/api/v1/badges/7751a6dc-97d0-4a2d-a1aa-1f9cb96cfb1d/deploy-status" alt="Netlify" className="h-4" />
         </a>
